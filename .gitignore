@@ -1,0 +1,16 @@
+# Binary
+*.exe
+fileservice
+
+# APK storage
+apks/*
+!apks/.gitkeep
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
