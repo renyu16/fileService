@@ -22,10 +22,6 @@ document.addEventListener('DOMContentLoaded', () => {
             showMessage('请选择文件', 'error');
             return;
         }
-        if (!file.name.toLowerCase().endsWith('.apk')) {
-            showMessage('只能上传 APK 文件', 'error');
-            return;
-        }
 
         const formData = new FormData();
         formData.append('file', file);
@@ -80,7 +76,7 @@ async function loadAPKs() {
         const apks = data.apks || [];
 
         if (apks.length === 0) {
-            filesList.innerHTML = '<p class="empty">暂无 APK 文件</p>';
+            filesList.innerHTML = '<p class="empty">暂无文件</p>';
             return;
         }
 

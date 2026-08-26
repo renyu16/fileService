@@ -3,22 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>APK 文件服务器</title>
+    <title>文件服务器</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>APK 文件服务器</h1>
-            <p class="subtitle">上传、管理和下载 APK 文件</p>
+            <h1>文件服务器</h1>
+            <p class="subtitle">上传、管理和下载文件</p>
         </header>
 
         <section class="upload-section">
-            <h2>上传 APK</h2>
+            <h2>上传文件</h2>
             <form id="uploadForm" enctype="multipart/form-data">
                 <div class="file-input-wrapper">
-                    <input type="file" id="fileInput" accept=".apk" required>
-                    <label for="fileInput" class="file-input-label">选择 APK 文件</label>
+                    <input type="file" id="fileInput" required>
+                    <label for="fileInput" class="file-input-label">选择文件</label>
                     <span id="fileName" class="file-name-display">未选择文件</span>
                 </div>
                 <button type="submit" id="uploadBtn" class="btn btn-primary">上传</button>
@@ -33,7 +33,7 @@
         </section>
 
         <section class="files-section">
-            <h2>APK 列表 <button id="refreshBtn" class="btn btn-small">刷新</button></h2>
+            <h2>文件列表 <button id="refreshBtn" class="btn btn-small">刷新</button></h2>
             <div id="filesList" class="files-list">
                 <p class="loading">加载中...</p>
             </div>

@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -64,7 +63,7 @@ func listAPKs(c *gin.Context) {
 
 	var apks []map[string]interface{}
 	for _, entry := range entries {
-		if entry.IsDir() || !strings.HasSuffix(strings.ToLower(entry.Name()), ".apk") {
+		if entry.IsDir() || entry.Name() == ".gitkeep" {
 			continue
 		}
 		info, _ := entry.Info()
@@ -88,11 +87,6 @@ func uploadAPK(c *gin.Context) {
 	}
 	defer file.Close()
 
-	if !strings.HasSuffix(strings.ToLower(header.Filename), ".apk") {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Only APK files are allowed"})
-		return
-	}
-
 	dstPath := filepath.Join(uploadDir, header.Filename)
 	dst, err := os.Create(dstPath)
 	if err != nil {
@@ -115,10 +109,6 @@ func uploadAPK(c *gin.Context) {
 
 func downloadAPK(c *gin.Context) {
 	filename := c.Param("filename")
-	if !strings.HasSuffix(strings.ToLower(filename), ".apk") {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid file type"})
-		return
-	}
 
 	filePath := filepath.Join(uploadDir, filename)
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
