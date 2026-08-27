@@ -18,7 +18,7 @@ var staticFiles embed.FS
 
 const (
 	uploadDir = "./apks"
-	port      = ":8088"
+	port      = ":8086"
 )
 
 func main() {
