@@ -6,6 +6,9 @@ fileservice
 apks/*
 !apks/.gitkeep
 
+# Runtime data
+data/
+
 # IDE
 .idea/
 .vscode/

@@ -238,6 +238,76 @@ h2 {
     display: none;
 }
 
+.auth-container {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding-top: 60px;
+}
+
+.auth-card {
+    background: #fff;
+    padding: 40px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 360px;
+    text-align: center;
+}
+
+.auth-card h1 {
+    color: #1a73e8;
+    font-size: 1.8em;
+    margin-bottom: 5px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1em;
+    box-sizing: border-box;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #1a73e8;
+}
+
+.btn-block {
+    width: 100%;
+}
+
+.btn-secondary {
+    background: #f1f3f4;
+    color: #333;
+}
+
+.btn-secondary:hover {
+    background: #e0e0e0;
+}
+
+.user-info {
+    margin-top: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.back-link {
+    display: inline-block;
+    margin-top: 15px;
+    color: #1a73e8;
+    text-decoration: none;
+}
+
 @media (max-width: 600px) {
     #uploadForm {
         flex-direction: column;

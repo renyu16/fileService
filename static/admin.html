@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>账号管理 - 文件服务器</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>账号管理</h1>
+            <p class="subtitle">创建和管理子账号</p>
+            <div><a href="/" class="back-link">← 返回文件列表</a></div>
+        </header>
+
+        <section>
+            <h2>创建子账号</h2>
+            <form id="createUserForm">
+                <div class="form-group">
+                    <input type="text" id="newUsername" placeholder="用户名" required>
+                </div>
+                <div class="form-group">
+                    <input type="password" id="newPassword" placeholder="密码（至少6位）" required>
+                </div>
+                <button type="submit" class="btn btn-primary">创建账号</button>
+            </form>
+            <div id="createMessage" class="message"></div>
+        </section>
+
+        <section>
+            <h2>子账号列表</h2>
+            <div id="usersList" class="files-list">
+                <p class="loading">加载中...</p>
+            </div>
+        </section>
+    </div>
+    <script src="/static/admin.js"></script>
+</body>
+</html>

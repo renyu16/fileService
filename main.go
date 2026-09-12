@@ -22,6 +22,8 @@ const (
 )
 
 func main() {
+	initDB()
+
 	if err := os.MkdirAll(uploadDir, 0755); err != nil {
 		panic(fmt.Sprintf("Failed to create upload directory: %v", err))
 	}
@@ -38,48 +40,66 @@ func main() {
 		c.Redirect(http.StatusMovedPermanently, "/static/index.html")
 	})
 
+	// 文件接口
 	api := r.Group("/api")
 	{
-		api.GET("/apks", listAPKs)
-		api.POST("/apks", uploadAPK)
-		api.GET("/apks/:filename", downloadAPK)
-		api.DELETE("/apks/:filename", deleteAPK)
-		api.GET("/apks/:filename/info", apkInfo)
+		api.GET("/files", listFiles)
+		api.POST("/files", requireLogin(), uploadFile)
+		api.GET("/files/:filename", downloadFile)
+		api.DELETE("/files/:filename", requireAdmin(), deleteFile)
+	}
+
+	// 认证接口
+	auth := r.Group("/api/auth")
+	{
+		auth.POST("/login", handleLogin)
+		auth.POST("/logout", requireLogin(), handleLogout)
+		auth.GET("/me", handleMe)
+		auth.POST("/change-password", requireLogin(), handleChangePassword)
+		auth.POST("/reset-password", requireAdmin(), handleResetPassword)
+	}
+
+	// 管理接口
+	admin := r.Group("/api/admin", requireAdmin())
+	{
+		admin.GET("/users", handleListUsers)
+		admin.POST("/users", handleCreateUser)
+		admin.DELETE("/users/:id", handleDeleteUser)
 	}
 
 	fmt.Printf("Server starting on http://localhost%s\n", port)
-	fmt.Printf("APK storage directory: %s\n", uploadDir)
+	fmt.Printf("File storage directory: %s\n", uploadDir)
 	if err := r.Run(port); err != nil {
 		panic(err)
 	}
 }
 
-func listAPKs(c *gin.Context) {
+func listFiles(c *gin.Context) {
 	entries, err := os.ReadDir(uploadDir)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	var apks []map[string]interface{}
+	var files []map[string]interface{}
 	for _, entry := range entries {
 		if entry.IsDir() || entry.Name() == ".gitkeep" {
 			continue
 		}
 		info, _ := entry.Info()
-		apks = append(apks, map[string]interface{}{
+		files = append(files, map[string]interface{}{
 			"name":         entry.Name(),
 			"size":         info.Size(),
 			"size_human":   humanSize(info.Size()),
 			"modified":     info.ModTime().Format(time.RFC3339),
-			"download_url": fmt.Sprintf("/api/apks/%s", entry.Name()),
+			"download_url": fmt.Sprintf("/api/files/%s", entry.Name()),
 		})
 	}
 
-	c.JSON(http.StatusOK, gin.H{"apks": apks})
+	c.JSON(http.StatusOK, gin.H{"files": files})
 }
 
-func uploadAPK(c *gin.Context) {
+func uploadFile(c *gin.Context) {
 	file, header, err := c.Request.FormFile("file")
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "No file uploaded"})
@@ -103,11 +123,11 @@ func uploadAPK(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message":      "Upload successful",
 		"filename":     header.Filename,
-		"download_url": fmt.Sprintf("/api/apks/%s", header.Filename),
+		"download_url": fmt.Sprintf("/api/files/%s", header.Filename),
 	})
 }
 
-func downloadAPK(c *gin.Context) {
+func downloadFile(c *gin.Context) {
 	filename := c.Param("filename")
 
 	filePath := filepath.Join(uploadDir, filename)
@@ -117,11 +137,10 @@ func downloadAPK(c *gin.Context) {
 	}
 
 	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
-	c.Header("Content-Type", "application/vnd.android.package-archive")
 	c.File(filePath)
 }
 
-func deleteAPK(c *gin.Context) {
+func deleteFile(c *gin.Context) {
 	filename := c.Param("filename")
 	filePath := filepath.Join(uploadDir, filename)
 
@@ -136,24 +155,6 @@ func deleteAPK(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "File deleted"})
-}
-
-func apkInfo(c *gin.Context) {
-	filename := c.Param("filename")
-	filePath := filepath.Join(uploadDir, filename)
-
-	info, err := os.Stat(filePath)
-	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "File not found"})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"name":       filename,
-		"size":       info.Size(),
-		"size_human": humanSize(info.Size()),
-		"modified":   info.ModTime().Format(time.RFC3339),
-	})
 }
 
 func humanSize(bytes int64) string {

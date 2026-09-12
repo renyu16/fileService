@@ -11,9 +11,12 @@
         <header>
             <h1>文件服务器</h1>
             <p class="subtitle">上传、管理和下载文件</p>
+            <div id="userInfo" class="user-info">
+                <span id="loginStatus"></span>
+            </div>
         </header>
 
-        <section class="upload-section">
+        <section class="upload-section hidden" id="uploadSection">
             <h2>上传文件</h2>
             <form id="uploadForm" enctype="multipart/form-data">
                 <div class="file-input-wrapper">

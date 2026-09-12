@@ -1,4 +1,5 @@
 const API_BASE = '/api';
+let currentRole = '';
 
 document.addEventListener('DOMContentLoaded', () => {
     const uploadForm = document.getElementById('uploadForm');
@@ -27,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
         formData.append('file', file);
 
         const xhr = new XMLHttpRequest();
-        xhr.open('POST', API_BASE + '/apks');
+        xhr.open('POST', API_BASE + '/files');
 
         xhr.upload.onprogress = (e) => {
             if (e.lengthComputable) {
@@ -43,10 +44,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 showMessage('上传成功!', 'success');
                 fileInput.value = '';
                 fileName.textContent = '未选择文件';
-                loadAPKs();
+                loadFiles();
             } else {
-                const resp = JSON.parse(xhr.responseText);
-                showMessage(resp.error || '上传失败', 'error');
+                try {
+                    const resp = JSON.parse(xhr.responseText);
+                    showMessage(resp.error || '上传失败', 'error');
+                } catch (err) {
+                    showMessage('上传失败', 'error');
+                }
             }
         };
 
@@ -61,48 +66,88 @@ document.addEventListener('DOMContentLoaded', () => {
         xhr.send(formData);
     });
 
-    refreshBtn.addEventListener('click', loadAPKs);
+    refreshBtn.addEventListener('click', loadFiles);
 
-    loadAPKs();
+    initUser();
+    loadFiles();
 });
 
-async function loadAPKs() {
+async function initUser() {
+    const loginStatus = document.getElementById('loginStatus');
+    const uploadSection = document.getElementById('uploadSection');
+    try {
+        const resp = await fetch(API_BASE + '/auth/me', { credentials: 'same-origin' });
+        if (resp.ok) {
+            const data = await resp.json();
+            currentRole = data.user.role;
+            const isAdmin = currentRole === 'admin';
+            loginStatus.innerHTML = `
+                <span>当前用户：${escapeHtml(data.user.username)}${isAdmin ? '（管理员）' : ''}</span>
+                ${isAdmin ? '<a href="/static/admin.html" class="btn btn-small">账号管理</a>' : ''}
+                <button onclick="logout()" class="btn btn-small btn-secondary">退出登录</button>
+            `;
+            uploadSection.classList.remove('hidden');
+        } else {
+            loginStatus.innerHTML = '<a href="/static/login.html" class="btn btn-small">登录</a>';
+            uploadSection.classList.add('hidden');
+        }
+    } catch (err) {
+        loginStatus.innerHTML = '<a href="/static/login.html" class="btn btn-small">登录</a>';
+        uploadSection.classList.add('hidden');
+    }
+}
+
+async function logout() {
+    try {
+        await fetch(API_BASE + '/auth/logout', { method: 'POST', credentials: 'same-origin' });
+        window.location.reload();
+    } catch (err) {
+        alert('退出失败');
+    }
+}
+
+async function loadFiles() {
     const filesList = document.getElementById('filesList');
     filesList.innerHTML = '<p class="loading">加载中...</p>';
 
     try {
-        const resp = await fetch(API_BASE + '/apks');
+        const resp = await fetch(API_BASE + '/files');
         const data = await resp.json();
-        const apks = data.apks || [];
+        const files = data.files || [];
 
-        if (apks.length === 0) {
+        if (files.length === 0) {
             filesList.innerHTML = '<p class="empty">暂无文件</p>';
             return;
         }
 
-        filesList.innerHTML = apks.map(apk => `
-            <div class="file-item">
-                <div class="file-info">
-                    <div class="file-name">${escapeHtml(apk.name)}</div>
-                    <div class="file-meta">${apk.size_human} | ${formatDate(apk.modified)}</div>
+        filesList.innerHTML = files.map(file => {
+            const deleteBtn = currentRole === 'admin'
+                ? `<button onclick="deleteFile('${escapeHtml(file.name)}')" class="btn btn-delete">删除</button>`
+                : '';
+            return `
+                <div class="file-item">
+                    <div class="file-info">
+                        <div class="file-name">${escapeHtml(file.name)}</div>
+                        <div class="file-meta">${file.size_human} | ${formatDate(file.modified)}</div>
+                    </div>
+                    <div class="file-actions">
+                        <a href="${file.download_url}" class="btn btn-download">下载</a>
+                        ${deleteBtn}
+                    </div>
                 </div>
-                <div class="file-actions">
-                    <a href="${apk.download_url}" class="btn btn-download">下载</a>
-                    <button onclick="deleteAPK('${escapeHtml(apk.name)}')" class="btn btn-delete">删除</button>
-                </div>
-            </div>
-        `).join('');
+            `;
+        }).join('');
     } catch (err) {
         filesList.innerHTML = '<p class="empty">加载失败</p>';
     }
 }
 
-async function deleteAPK(filename) {
+async function deleteFile(filename) {
     if (!confirm('确认删除 ' + filename + '?')) return;
     try {
-        const resp = await fetch(`${API_BASE}/apks/${encodeURIComponent(filename)}`, { method: 'DELETE' });
+        const resp = await fetch(`${API_BASE}/files/${encodeURIComponent(filename)}`, { method: 'DELETE', credentials: 'same-origin' });
         if (resp.ok) {
-            loadAPKs();
+            loadFiles();
         } else {
             const data = await resp.json();
             showMessage(data.error || '删除失败', 'error');
