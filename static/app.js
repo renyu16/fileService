@@ -121,17 +121,23 @@ async function loadFiles() {
         }
 
         filesList.innerHTML = files.map(file => {
+            const isLoggedIn = currentRole !== '';
+            const renameBtn = isLoggedIn
+                ? `<button onclick="renameFile('${escapeHtml(file.name)}', '${escapeHtml(file.display_name || '')}')" class="btn btn-small">改名</button>`
+                : '';
             const deleteBtn = currentRole === 'admin'
                 ? `<button onclick="deleteFile('${escapeHtml(file.name)}')" class="btn btn-delete">删除</button>`
                 : '';
+            const displayName = file.display_name ? escapeHtml(file.display_name) : escapeHtml(file.name);
             return `
                 <div class="file-item">
                     <div class="file-info">
-                        <div class="file-name">${escapeHtml(file.name)}</div>
-                        <div class="file-meta">${file.size_human} | ${formatDate(file.modified)}</div>
+                        <div class="file-name">${displayName}</div>
+                        <div class="file-meta">${escapeHtml(file.name)} | ${file.size_human} | ${formatDate(file.modified)}</div>
                     </div>
                     <div class="file-actions">
                         <a href="${file.download_url}" class="btn btn-download">下载</a>
+                        ${renameBtn}
                         ${deleteBtn}
                     </div>
                 </div>
@@ -139,6 +145,28 @@ async function loadFiles() {
         }).join('');
     } catch (err) {
         filesList.innerHTML = '<p class="empty">加载失败</p>';
+    }
+}
+
+async function renameFile(filename, currentName) {
+    const newName = prompt('请输入新的名称（留空则恢复为文件名）：', currentName || '');
+    if (newName === null) return;
+
+    try {
+        const resp = await fetch(`${API_BASE}/files/${encodeURIComponent(filename)}/name`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
+            body: JSON.stringify({ name: newName })
+        });
+        const data = await resp.json();
+        if (resp.ok) {
+            loadFiles();
+        } else {
+            showMessage(data.error || '改名失败', 'error');
+        }
+    } catch (err) {
+        showMessage('网络错误', 'error');
     }
 }
 

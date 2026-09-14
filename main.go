@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -47,6 +48,7 @@ func main() {
 		api.POST("/files", requireLogin(), uploadFile)
 		api.GET("/files/:filename", downloadFile)
 		api.DELETE("/files/:filename", requireAdmin(), deleteFile)
+		api.PUT("/files/:filename/name", requireLogin(), updateFileName)
 	}
 
 	// 认证接口
@@ -87,8 +89,11 @@ func listFiles(c *gin.Context) {
 			continue
 		}
 		info, _ := entry.Info()
+		displayName := ""
+		db.QueryRow(`SELECT display_name FROM file_meta WHERE filename = ?`, entry.Name()).Scan(&displayName)
 		files = append(files, map[string]interface{}{
 			"name":         entry.Name(),
+			"display_name": displayName,
 			"size":         info.Size(),
 			"size_human":   humanSize(info.Size()),
 			"modified":     info.ModTime().Format(time.RFC3339),
@@ -154,7 +159,49 @@ func deleteFile(c *gin.Context) {
 		return
 	}
 
+	if _, err := db.Exec(`DELETE FROM file_meta WHERE filename = ?`, filename); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete file meta"})
+		return
+	}
+
 	c.JSON(http.StatusOK, gin.H{"message": "File deleted"})
+}
+
+type updateNameRequest struct {
+	Name string `json:"name"`
+}
+
+func updateFileName(c *gin.Context) {
+	filename := c.Param("filename")
+	filePath := filepath.Join(uploadDir, filename)
+
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		c.JSON(http.StatusNotFound, gin.H{"error": "File not found"})
+		return
+	}
+
+	var req updateNameRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "参数错误"})
+		return
+	}
+
+	req.Name = strings.TrimSpace(req.Name)
+
+	if req.Name == "" {
+		if _, err := db.Exec(`DELETE FROM file_meta WHERE filename = ?`, filename); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "服务器错误"})
+			return
+		}
+	} else {
+		if _, err := db.Exec(`INSERT INTO file_meta (filename, display_name) VALUES (?, ?)
+			ON CONFLICT(filename) DO UPDATE SET display_name = excluded.display_name`, filename, req.Name); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "服务器错误"})
+			return
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "名称已更新"})
 }
 
 func humanSize(bytes int64) string {

@@ -38,6 +38,14 @@ func initDB() {
 		panic(fmt.Sprintf("Failed to init schema: %v", err))
 	}
 
+	metaSchema := `CREATE TABLE IF NOT EXISTS file_meta (
+		filename     TEXT PRIMARY KEY,
+		display_name TEXT
+	);`
+	if _, err := db.Exec(metaSchema); err != nil {
+		panic(fmt.Sprintf("Failed to init file_meta schema: %v", err))
+	}
+
 	ensureAdmin()
 }
 
