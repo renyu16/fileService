@@ -184,23 +184,27 @@ h2 {
 
 .file-info {
     flex: 1;
+    min-width: 0;
 }
 
 .file-name {
     font-weight: 500;
     color: #333;
     word-break: break-all;
+    line-height: 1.4;
 }
 
 .file-meta {
     font-size: 0.85em;
     color: #666;
     margin-top: 3px;
+    word-break: break-all;
 }
 
 .file-actions {
     display: flex;
     gap: 8px;
+    flex-shrink: 0;
 }
 
 .btn-download {
@@ -315,5 +319,18 @@ h2 {
     }
     .file-input-label {
         text-align: center;
+    }
+    .file-item {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+    .file-actions {
+        flex-wrap: wrap;
+    }
+    .file-actions .btn {
+        flex: 1;
+        text-align: center;
+        padding: 10px 12px;
     }
 }
