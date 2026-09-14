@@ -83,6 +83,7 @@ async function initUser() {
             const isAdmin = currentRole === 'admin';
             loginStatus.innerHTML = `
                 <span>当前用户：${escapeHtml(data.user.username)}${isAdmin ? '（管理员）' : ''}</span>
+                <a href="/static/change-password.html" class="btn btn-small">修改密码</a>
                 ${isAdmin ? '<a href="/static/admin.html" class="btn btn-small">账号管理</a>' : ''}
                 <button onclick="logout()" class="btn btn-small btn-secondary">退出登录</button>
             `;
