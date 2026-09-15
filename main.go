@@ -47,7 +47,7 @@ func main() {
 		api.GET("/files", listFiles)
 		api.POST("/files", requireLogin(), uploadFile)
 		api.GET("/files/:filename", downloadFile)
-		api.DELETE("/files/:filename", requireAdmin(), deleteFile)
+		api.DELETE("/files/:filename", requireLogin(), deleteFile)
 		api.PUT("/files/:filename/name", requireLogin(), updateFileName)
 	}
 

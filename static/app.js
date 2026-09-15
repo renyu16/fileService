@@ -126,7 +126,7 @@ async function loadFiles() {
             const renameBtn = isLoggedIn
                 ? `<button onclick="renameFile('${escapeHtml(file.name)}', '${escapeHtml(file.display_name || '')}')" class="btn btn-small">改名</button>`
                 : '';
-            const deleteBtn = currentRole === 'admin'
+            const deleteBtn = isLoggedIn
                 ? `<button onclick="deleteFile('${escapeHtml(file.name)}')" class="btn btn-delete">删除</button>`
                 : '';
             const displayName = file.display_name ? escapeHtml(file.display_name) : escapeHtml(file.name);
